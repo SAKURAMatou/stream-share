@@ -61,7 +61,7 @@ Stream.iterate(0, item -> item + 1).limit(10)
                 .forEach(System.out::println);
 ```
 
-# 中间操作（Intermediate Operations）
+# 三、中间操作（Intermediate Operations）
 
 ## lambda[表达式](https://www.runoob.com/java/java8-lambda-expressions.html)
 
@@ -214,7 +214,7 @@ System.out.println(collect2);
 
 limit 取前n个元素，skip跳过前n个元素，如果流中的元素小于或者等于n，就会返回一个空的流。
 
-```
+```java
 List<Integer> intList = Arrays.asList(1, 3, 5, 7, 9, 11);
 List<Integer> collect1 = intList.stream().limit(5).collect(Collectors.toList());
 List<Integer> collect2 = intList.stream().skip(3).collect(Collectors.toList());
@@ -228,3 +228,344 @@ System.out.println(collect2.toString());
 [1, 3, 5, 7, 9]
 ------分割线-----
 [7, 9, 11]
+
+# 四、终端操作（Terminal Operations）
+
+### 先理解一个概念：Optional 。
+
+> `Optional`类是一个可以为`null`的容器对象。如果值存在则`isPresent()`方法会返回`true`，调用`get()`方法会返回该对象。
+> 更详细说明请见：[菜鸟教程Java 8 Optional类](https://www.runoob.com/java/java8-optional-class.html)
+
+### foreach、forEachOrdered
+
+遍历流中的元素。foreach和forEachOrdered区别在于并行流时，forEachOrdered按照流的顺序，foreach不一定按照流的顺序
+
+#### foreach
+
+```java
+Stream.of(1, 2, 3, 5, 6, 4, 9).forEach(System.out::print);
+System.out.println("\n");
+Stream.of(1, 2, 3, 5, 6, 4, 9).parallel().forEach(System.out::print);
+```
+
+输出：
+
+1235649
+
+6549312
+
+#### forEachOrdered
+
+```java
+Stream.of(1, 2, 3, 5, 6, 4, 9).forEachOrdered(System.out::print);
+System.out.println("\n");
+Stream.of(1, 2, 3, 5, 6, 4, 9).parallel().forEachOrdered(System.out::print);
+```
+
+输出：
+
+1235649
+
+1235649
+
+### 规约（reduce）
+
+规约：将流缩减成一个值，可以用于求最值，求和等；reduce操作需要提供一个初值（seed），将初值和流中元素进行指定的操作。没有初值时返回option对象，有初值时直接返回结果
+
+#### 示例一：求整数数组的元素的和，最大值
+
+```java
+List<Integer> list = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+//无初值时返回optional对象
+Integer total = list.stream().reduce(0, Integer::sum);
+Integer total2 = list.stream().reduce(Integer::sum).get();
+Integer reduced1 = list.stream().reduce((x, y) -> x * y).get();
+Integer max1 = list.stream().reduce(Integer::max).get();
+Integer max2 = list.stream().reduce((x, y) -> x > y ? x : y).get();
+System.out.println("求和有初值：" + total);
+System.out.println("求和无初值：" + total2);
+System.out.println("乘积：" + reduced1);
+System.out.println("最大值" + max1);
+```
+
+输出：
+
+求和有初值：55
+求和无初值：55
+乘积：3628800
+最大值10
+
+#### 示例二：求所有人薪资和，以及薪资最高的人
+
+```java
+Person person = new Person();
+List<Person> personList = person.getPerssonList();
+Person maxSalary = personList.stream().reduce((p1, p2) -> {
+    return p1.getSalary() > p2.getSalary() ? p1 : p2;
+}).get();
+Integer totalSalary = personList.stream().map(Person::getSalary).reduce(Integer::sum).get();
+Integer integer = personList.stream().map(Person::getSalary).max(Integer::compareTo).get();
+System.out.println("薪资之和：" + totalSalary);
+System.out.println("薪资最高的人：" + maxSalary.toString());
+System.out.println("最高薪资：" + integer);
+```
+
+输出：
+
+薪资之和：42300
+薪资最高的人：Owen-9500-23
+最高薪资：9500
+
+### max/ min/ count
+
+返回流中的最值和元素数量
+
+#### 示例：找出薪资最高/低的人以及最高/低薪资，
+
+```java
+Person person = new Person();
+List<Person> personList = person.getPerssonList();
+Integer maxSalary = personList.stream().map(Person::getSalary).max(Integer::compareTo).get();
+Person person1 = personList.stream().max(Comparator.comparing(Person::getSalary)).get();
+Integer minSalary = personList.stream().map(Person::getSalary).min(Integer::compareTo).get();
+Person person2 = personList.stream().min(Comparator.comparing(Person::getSalary)).get();
+System.out.println("最高薪资：" + maxSalary);
+System.out.println("薪资最高的人：" + person1.toString());
+System.out.println("最低薪资：" + minSalary);
+System.out.println("薪资最低的人：" + person2.toString());
+```
+
+输出：
+
+最高薪资：9500
+薪资最高的人：Owen-9500-23
+最低薪资：7800
+薪资最低的人：Lily-7800-20
+
+### 匹配
+
+匹配的操作有：
+
+anyMatch：Stream 中只要有一个元素符合传入的断言，就返回 true，否则返回false
+
+allMatch：Stream 中所有元素都符合传入的断言时返回 true，否则返回false，流为空时总是返回true。
+
+noneMatch：Stream 中所有元素都不满足传入的断言时返回 true，否则返回false
+
+```java
+List<Integer> ins = Arrays.asList(1, 2, 3, 4, 5);
+//是否有大于3的数据
+boolean b = ins.stream().anyMatch(x -> x > 3);
+//是否全部都大于3
+boolean b1 = ins.stream().allMatch(x -> x > 3);
+//全部都不大于5
+boolean b3 = ins.stream().noneMatch(x -> x > 5);
+System.out.println("是否有大于3的数据：" + b);
+System.out.println("是否全部都大于3：" + b1);
+System.out.println("是否全部都不大于5：" + b3);
+//空对象
+Stream<Integer> emptyStream = Stream.empty();
+boolean empty1 = emptyStream.anyMatch(x -> x > 3);
+emptyStream = Stream.empty();
+boolean empty2 = emptyStream.anyMatch(x -> x == 3);
+emptyStream = Stream.empty();
+boolean empty3 = emptyStream.anyMatch(x -> x < 3);
+System.out.println("空stream的anyMatch:" + empty1 + "," + empty2 + "," + empty3);
+List<Integer> numist = Collections.emptyList();
+boolean c1 = numist.stream().allMatch(e -> e > 1);
+boolean c2 = numist.stream().allMatch(e -> e == 1);
+boolean c3 = numist.stream().allMatch(e -> e < 1);
+System.out.println("空对象创建的stream的anyMatch" + c1 + "," + c2 + "," + c3);
+```
+
+findFirst：总是返回流中的第一个元素，如果流为空，返回一个空的Optional.
+
+findAny：返回流中的任意一个元素即可，如果流为空，返回一个空的Optional.
+
+并行流findAny的结果每次不一样
+
+```java
+List<Integer> list = Arrays.asList(1, 2, 3, 4, 5, 6);
+        Integer findAny1 = list.stream().findAny().get();
+        Integer findAny2 = list.stream().findAny().get();
+        Integer findFirst = list.stream().findFirst().get();
+        Integer findAny3 = list.parallelStream().findAny().get();
+        Integer findAny4 = list.parallelStream().findAny().get();
+        System.out.println("查找任意：" + findAny1 + "," + findAny2);
+        System.out.println("查找任意并行流：" + findAny3 + "," + findAny4);
+        System.out.println("查找第一个" + findFirst);
+```
+
+```java
+List<Integer> list = Collections.emptyList();
+Optional<Integer> first = list.stream().findFirst();
+Optional<Integer> any = list.stream().findAny();
+System.out.println("空对象的stream：" + first.isPresent() + "," + any.isPresent());
+Stream<Object> empty = Stream.empty();
+Optional<Object> first1 = empty.findFirst();
+empty = Stream.empty();
+Optional<Object> any1 = empty.findAny();
+System.out.println("空的stream：" + first1.isPresent() + "," + any1.isPresent());
+```
+
+## 收集collect
+
+将操作之后的流转化为一个新的集合，流不保存数据。主要通过`java.util.stream.Collectors`的内置静态方法实现。
+
+### collect()的入参：
+
+```java
+Collector<? super T, A, R> collector //Collectors的内置静态方法
+
+Supplier<R> supplier,//生成目标类型实例的方法,确定目标容器是什么
+BiConsumer<R, ? super T> accumulator,//将数据填充到目标容器中的方法，生成实例
+BiConsumer<R, R> combiner //将accumulator方法生成的多个对象整合成一个
+```
+
+### toList、toSet
+
+区别在于list和set的区别；list和set均继承Collection。
+
+list是有序的，ArrayList和LinkedList实现list接口
+
+set是无序的，HashSet，treeSet实现了set接口
+
+示例：找出薪资高于8500的人
+
+```java
+Stream.of(1, 2, 3, 4, 3, 4).collect(Collectors.toList()).forEach(System.out::print);
+        System.out.println("\n");
+        Stream.of(1, 2, 3, 4, 3, 4).collect(Collectors.toSet()).forEach(System.out::print);
+        System.out.println("\n");
+        Person person = new Person();
+        List<Person> personList = person.getPerssonList();
+        List<Person> collect = personList.stream().filter(p -> p.getSalary() > 8500).collect(Collectors.toList());
+        collect.forEach(System.out::println);
+        System.out.println("-------toSet()------------");
+        Set<Person> collect1 = personList.stream().filter(p -> p.getSalary() > 8500).collect(Collectors.toSet());
+        collect1.forEach(System.out::println);
+```
+
+### toMap
+
+由于Map中有Key和Value这两个值，故该方法与toSet、toList等的处理方式是不一样的，最少应接受两个参数，一个用来生成key，另外一个用来生成value；Collectors.toMap(genereteKey,generateValue)
+
+将person对象转化为姓名-薪资的map
+
+```java
+Map<String, Integer> personMap2 = personList.stream().collect(Collectors.toMap(Person::getName,
+        Person::getSalary));
+System.out.println(personMap2.toString());
+```
+
+### collect操作还可以将流转化为一个值
+
+`Collectors`提供了一系列用于数据统计的静态方法：
+
+- 计数：`counting`
+- 平均值：`averagingInt`、`averagingLong`、`averagingDouble`
+- 最值：`maxBy`、`minBy`
+- 求和：`summingInt`、`summingLong`、`summingDouble`
+- 统计以上所有：`summarizingInt`、`summarizingLong`、`summarizingDouble`
+
+```java
+Person person = new Person();
+List<Person> personList = person.getPerssonList();
+//流中元素总数
+Long count = personList.stream().collect(Collectors.counting());
+//平均值
+Double avgSalsry = personList.stream().collect(Collectors.averagingInt(p -> p.getSalary()));
+//最值
+Person maxAge = personList.stream().collect(Collectors.maxBy(Comparator.comparing(Person::getSalary))).get();
+//求和
+Integer totalSalary = personList.stream().collect(Collectors.summingInt(Person::getSalary));
+//对一个量求平均值、最值
+IntSummaryStatistics collect = personList.stream().collect(Collectors.summarizingInt(Person::getSalary));
+System.out.println("元素总数" + count);
+System.out.println("薪资平均值" + avgSalsry);
+System.out.println("薪资最值" + maxAge);
+System.out.println("薪资总和" + totalSalary);
+System.out.println("薪资总综合分析" + collect);
+```
+
+### 分组
+
+#### 将一个流按照条件拆分成多个，返回map对象
+
+![](https://img-blog.csdn.net/20170209093620262?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvSU9fRmllbGQ=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
+
+partitioningBy()传入一个判断的函数，将结果分为False和True两组；
+
+groupingBy()传入分组依据，可以分为多个组（map）
+
+```java
+Person person = new Person();
+List<Person> personList = person.getPerssonList();
+//按照薪资是否高于8000分为高底薪
+Map<Boolean, List<Person>> salaryMap =
+        personList.stream().collect(Collectors.partitioningBy(person1 -> person1.getSalary() > 8000));
+//按照地区分组
+Map<String, List<Person>> areaGroup = personList.stream().collect(Collectors.groupingBy(Person::getArea));
+System.out.println("高低薪" + salaryMap.toString());
+System.out.println("地区分组" + areaGroup.toString());
+Map<String, Map<String, List<Person>>> gruop2 =
+        personList.stream().collect(Collectors.groupingBy(Person::getSex,
+                Collectors.groupingBy(Person::getArea)));
+System.out.println("性别+地区分组" + gruop2.toString());
+```
+
+输出
+
+高低薪{false=[Lily-7800-20, Alisa-7900-22], true=[Tom-8900-20, Anni-8200-21, Owen-9500-23]}
+地区分组{上海=[Anni-8200-21], 苏州=[Alisa-7900-22], 南京=[Owen-9500-23], 北京=[Tom-8900-20, Lily-7800-20]}
+性别+地区分组{female={上海=[Anni-8200-21], 苏州=[Alisa-7900-22], 北京=[Lily-7800-20]}, male={南京=[Owen-9500-23], 北京=[Tom-8900-20]}}
+
+#### 分组并统计数量
+
+```java
+Person person = new Person();
+List<Person> personList = person.getPerssonList();
+//统计薪资高于，低于8000的人数
+Map<Boolean, Long> count =
+        personList.stream().collect(Collectors.partitioningBy(person1 -> person1.getSalary() > 8000,
+                Collectors.counting()));
+//求每个地区的人数
+Map<String, Long> areaCount = personList.stream().collect(Collectors.groupingBy(Person::getArea,
+        Collectors.counting()));
+System.out.println("薪资统计" + count);
+System.out.println("地区统计" + areaCount);
+Map<String, Map<String, Long>> collect = personList.stream().collect(Collectors.groupingBy(Person::getSex,
+        Collectors.groupingBy(Person::getArea,
+        Collectors.counting())));
+System.out.println("性别+地区分组"+collect);
+```
+
+输出：
+
+薪资统计{false=2, true=3}
+地区统计{上海=1, 苏州=1, 南京=1, 北京=2}
+性别+地区分组{female={上海=1, 苏州=1, 北京=1}, male={南京=1, 北京=1}}
+
+### 拼接（joining）
+
+将stream中的元素用特定的连接符，入参可以有三个。
+
+joining(m,l,r)。m：拼接元素的字符，两个元素之间
+
+​                         l：最左边的字符，即第一个元素左侧字符，
+
+​                         r：最右边的字符，即最后一个元素右侧的字符；
+
+```java
+String join1 =
+        Stream.of('x', 'c', 'f', 'r', 'q').map(String::valueOf).collect(Collectors.joining("-"));
+String join2 = Stream.of('x', 'c', 'f', 'r', 'q').map(String::valueOf).collect(Collectors.joining("-", "[",
+        "]"));
+System.out.println("拼接1入参：" + join1);
+System.out.println("拼接3入参：" + join2);
+```
+
+输出：
+
+拼接1入参：x-c-f-r-q
+拼接3入参：[x-c-f-r-q]

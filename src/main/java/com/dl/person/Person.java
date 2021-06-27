@@ -28,11 +28,11 @@ public class Person {
 
     public List<Person> getPerssonList() {
         List<Person> personList = new ArrayList<>();
-        personList.add(new Person("Tom", 8900, 20, "male", "New York"));
-        personList.add(new Person("Lily", 7800, 20, "female", "Washington"));
-        personList.add(new Person("Anni", 8200, 21, "female", "New York"));
-        personList.add(new Person("Owen", 9500, 23, "male", "New York"));
-        personList.add(new Person("Alisa", 7900, 22, "female", "New York"));
+        personList.add(new Person("Tom", 8900, 20, "male", "北京"));
+        personList.add(new Person("Lily", 7800, 20, "female", "北京"));
+        personList.add(new Person("Anni", 8200, 21, "female", "上海"));
+        personList.add(new Person("Owen", 9500, 23, "male", "南京"));
+        personList.add(new Person("Alisa", 7900, 22, "female", "苏州"));
         return personList;
     }
 
