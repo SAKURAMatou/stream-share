@@ -342,7 +342,7 @@ System.out.println("薪资最低的人：" + person2.toString());
 最低薪资：7800
 薪资最低的人：Lily-7800-20
 
-### 匹配
+### 匹配(anyMatch,allMatch,findFirst)
 
 匹配的操作有：
 
