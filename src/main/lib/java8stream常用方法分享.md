@@ -188,7 +188,7 @@ List<String> mzc = Stream.of("ma", "zhi", "chu", "zhi", "shuo", "ma")
 
 输出：[ma, zhi, chu, shuo]
 
-## sort
+## sort排序
 
 排序，按照薪资排序
 
@@ -202,6 +202,12 @@ System.out.println("------分割线-----");
 List<Person> collect2 =
         personList.stream().sorted(Comparator.comparing(Person::getSalary).reversed()).collect(Collectors.toList());
 System.out.println(collect2);
+lambda表达式排序，返回值为数字
+ Person person = new Person();
+        List<Person> personList = person.getPerssonList();
+        List<Person> collect =
+                personList.stream().sorted((p1,p2)->p1.getAge()-p2.getAge()).collect(Collectors.toList());
+        System.out.println(collect);
 ```
 
 输出：
