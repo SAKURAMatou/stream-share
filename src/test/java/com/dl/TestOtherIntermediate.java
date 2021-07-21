@@ -45,6 +45,14 @@ public class TestOtherIntermediate {
                         .collect(Collectors.toList());
         System.out.println(collect);
     }
+    @Test
+    public void sorted3(){
+        Person person = new Person();
+        List<Person> personList = person.getPerssonList();
+        List<Person> collect =
+                personList.stream().sorted((p1,p2)->p1.getAge()-p2.getAge()).collect(Collectors.toList());
+        System.out.println(collect);
+    }
 
     @Test
     public void limitSkip() {
